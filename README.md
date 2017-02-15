@@ -1,5 +1,5 @@
 
-# Alarm Adapter [![CircleCI](https://circleci.com/gh/lodastack/agent.svg?style=svg&circle-token=b26ad578124d061da19fb8cd796bc12b0d1393bd)](https://circleci.com/gh/lodastack/agent)
+# Alarm Adapter [![CircleCI](https://circleci.com/gh/lodastack/alarm-adapter.svg?style=svg&circle-token=67ea071b179f21ae2592ec4759eaa0777eb42472)](https://circleci.com/gh/lodastack/alarm-adapter)
 
 ## Build
 
