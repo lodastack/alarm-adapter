@@ -1,0 +1,51 @@
+package command
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"syscall"
+
+	"github.com/lodastack/alarm-adapter/config"
+
+	"github.com/oiooj/cli"
+)
+
+var CmdStop = cli.Command{
+	Name:        "stop",
+	Usage:       "关闭",
+	Description: "关闭",
+	Action:      runStop,
+}
+
+func runStop(c *cli.Context) {
+	stopAgent()
+}
+
+func stopAgent() {
+	data, err := ioutil.ReadFile(config.PID)
+	if err != nil {
+		fmt.Printf("cannot read pid file: %s ", config.PID)
+		return
+	}
+	pid, _ := strconv.Atoi(string(data))
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		fmt.Println("read pid process error ")
+		return
+	}
+	err = process.Signal(syscall.SIGINT)
+	if err != nil {
+		fmt.Printf("send signal to process error: %s ", err)
+		return
+	}
+	err = os.Remove(config.PID)
+	if err == os.ErrNotExist {
+		err = nil
+	}
+	if err != nil {
+		fmt.Printf("send signal to process successfully and remove pid error: %s ", err)
+	}
+	fmt.Printf("send signal to process successfully ")
+}

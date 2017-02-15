@@ -1,0 +1,9 @@
+[main]
+	registryAddr = "registry.test.com"
+
+
+[log]
+	logdir = "/tmp/agent/log"
+	loglevel = "DEBUG"
+	logrotatenum = 5
+	logrotatesize = 1887436800
