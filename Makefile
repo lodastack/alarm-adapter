@@ -6,6 +6,8 @@ fmt:
 dep:fmt
 	go get github.com/oiooj/cli
 	go get github.com/lodastack/log
+	go get github.com/lodastack/models
+	go get github.com/influxdata/kapacitor
 	go get github.com/BurntSushi/toml
 
 install:dep

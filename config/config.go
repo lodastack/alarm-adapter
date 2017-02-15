@@ -35,6 +35,8 @@ type Config struct {
 }
 
 type MainConfig struct {
+	AlarmNS      string `toml:"alarmNS"`
+	AlarmAddr    string `toml:"alarmAddr"`
 	RegistryAddr string `toml:"registryAddr"`
 }
 

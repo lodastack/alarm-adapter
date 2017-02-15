@@ -1,9 +1,11 @@
 [main]
-	registryAddr = "registry.test.com"
+	alarmNS       = "alarm.monitor.loda"
+	registryAddr  = "http://registry.test.com"
+	alarmAddr     = ""
 
 
 [log]
-	logdir = "/tmp/agent/log"
+	logdir = "/tmp/alarm-adapter/log"
 	loglevel = "DEBUG"
 	logrotatenum = 5
 	logrotatesize = 1887436800

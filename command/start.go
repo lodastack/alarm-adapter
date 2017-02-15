@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/lodastack/alarm-adapter/adapter"
 	"github.com/lodastack/alarm-adapter/config"
 	"github.com/lodastack/log"
 
@@ -42,7 +43,7 @@ func runStart(c *cli.Context) {
 	go Notify()
 
 	//start main
-
+	go adapter.Start()
 	select {}
 }
 
