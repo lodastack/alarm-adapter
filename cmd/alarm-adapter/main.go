@@ -1,23 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/lodastack/alarm-adapter/command"
 	"github.com/lodastack/alarm-adapter/config"
 
 	"github.com/oiooj/cli"
 )
-
-func init() {
-	if runtime.GOOS != "linux" {
-		fmt.Printf("Agent don't support this arch: %s\n", runtime.GOOS)
-		os.Exit(1)
-	}
-	runtime.GOMAXPROCS(runtime.NumCPU())
-}
 
 func main() {
 	app := cli.NewApp()

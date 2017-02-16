@@ -1,9 +1,10 @@
 [main]
-	registryAddr = "registry.test.com"
+	registryAddr  = "http://registry.test.com"
+	kapacitorAddr = ["http://kapacitor.test.com:9002"]
 
 
 [log]
-	logdir = "/tmp/agent/log"
+	logdir = "/tmp/alarm-adapter/log"
 	loglevel = "DEBUG"
 	logrotatenum = 5
 	logrotatesize = 1887436800

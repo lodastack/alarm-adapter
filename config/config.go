@@ -35,7 +35,8 @@ type Config struct {
 }
 
 type MainConfig struct {
-	RegistryAddr string `toml:"registryAddr"`
+	RegistryAddr  string   `toml:"registryAddr"`
+	KapacitorAddr []string `toml:"kapacitorAddr"`
 }
 
 type LogConfig struct {
