@@ -4,20 +4,28 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lodastack/alarm-adapter/config"
 	"github.com/lodastack/log"
 	"github.com/lodastack/models"
 
 	"github.com/influxdata/kapacitor/client/v1"
 )
 
+const alertURL = "http://api.msg.ifengidc.com:7989/sendRTX"
+
 type Kapacitor struct {
 	Addrs []string
+	Hash  *Consistent
 }
 
 func NewKapacitor(addrs []string) *Kapacitor {
+	c := NewConsistent()
+	for _, addr := range addrs {
+		c.Add(addr)
+	}
+
 	k := &Kapacitor{
 		Addrs: addrs,
+		Hash:  c,
 	}
 	return k
 }
@@ -69,7 +77,7 @@ func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
 	}
 
 	config := client.Config{
-		URL:     config.C.Main.RegistryAddr,
+		URL:     k.hashKapacitor(alarm.ID),
 		Timeout: time.Duration(3) * time.Second,
 	}
 	c, err := client.New(config)
@@ -79,6 +87,16 @@ func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
 
 	_, err = c.CreateTask(createOpts)
 	return err
+}
+
+func (k *Kapacitor) hashKapacitor(id string) string {
+	choose, err := k.Hash.Get(id)
+	if err != nil {
+		log.Errorf("hash get server failed:%s", err)
+		// need fix here, panic risk
+		return k.Addrs[len(k.Addrs)-1]
+	}
+	return choose
 }
 
 func GenTick(alarm models.Alarm) (string, error) {
@@ -92,8 +110,10 @@ batch
         .every(%s)
         .groupBy(time(1m),'host')
     |alert()
-        .crit(lambda: "mean" > %s)
+        .crit(lambda: "%s" %s %s)
+        .post(%s)
         .slack()`
-	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, alarm.Period, alarm.Every, alarm.Value)
+	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement,
+		alarm.Period, alarm.Every, alarm.Func, alarm.Expression, alarm.Value, alertURL)
 	return res, nil
 }

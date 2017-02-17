@@ -23,6 +23,7 @@ func Start() {
 			alarms, err := r.Alarms()
 			if err != nil {
 				fmt.Println(err)
+				return
 			}
 			res, _ := GenTick(alarms[0])
 			fmt.Printf("%s", res)
