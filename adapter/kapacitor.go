@@ -13,50 +13,83 @@ import (
 const alertURL = "http://api.msg.ifengidc.com:7989/sendRTX"
 
 type Kapacitor struct {
-	Addrs []string
-	Hash  *Consistent
+	Addrs   []string
+	Clients map[string]*client.Client
+	Hash    *Consistent
 }
 
 func NewKapacitor(addrs []string) *Kapacitor {
 	c := NewConsistent()
+	clients := make(map[string]*client.Client)
 	for _, addr := range addrs {
 		c.Add(addr)
-	}
 
-	k := &Kapacitor{
-		Addrs: addrs,
-		Hash:  c,
-	}
-	return k
-}
-
-func (k *Kapacitor) Tasks() []client.Task {
-	var tasks []client.Task
-	for _, url := range k.Addrs {
 		config := client.Config{
-			URL:     url,
+			URL:     addr,
 			Timeout: time.Duration(3) * time.Second,
 		}
 		c, err := client.New(config)
 		if err != nil {
-			log.Errorf("new kapacitor %s client failed: %s", url, err)
+			log.Errorf("new kapacitor %s client failed: %s", addr, err)
+		}
+		clients[addr] = c
+	}
+
+	k := &Kapacitor{
+		Addrs:   addrs,
+		Hash:    c,
+		Clients: clients,
+	}
+
+	return k
+}
+
+func (k *Kapacitor) Tasks() map[string]client.Task {
+	tasks := make(map[string]client.Task)
+	for _, url := range k.Addrs {
+		c, ok := k.Clients[url]
+		if !ok {
+			log.Errorf("get cache kapacitor %s client failed", url)
+			continue
 		}
 		var listOpts client.ListTasksOptions
 		listOpts.Default()
-		t, err := c.ListTasks(&listOpts)
+		ts, err := c.ListTasks(&listOpts)
 		if err != nil {
 			log.Errorf("list kapacitor %s client failed: %s", url, err)
-		} else {
-			tasks = append(tasks, t...)
+			continue
+		}
+		for _, t := range ts {
+			tasks[t.ID] = t
 		}
 	}
 	return tasks
+}
+
+func (k *Kapacitor) Work(tasks map[string]client.Task, alarms map[string]models.Alarm) {
+	for id, alarm := range alarms {
+		if _, ok := tasks[id]; ok {
+			continue
+		}
+		go k.CreateTask(alarm)
+	}
+
+	for id, task := range tasks {
+		if _, ok := alarms[id]; ok {
+			continue
+		}
+		go k.RemoveTask(task)
+	}
 }
 
 // Create a new task.
 // Errors if the task already exists.
 func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
 	tick, err := GenTick(alarm)
+	if err != nil {
+		log.Errorf("gen tick script failed:%s", err)
+		return err
+	}
 	dbrps := []client.DBRP{
 		{
 			Database:        alarm.DB,
@@ -69,24 +102,35 @@ func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
 	}
 
 	createOpts := client.CreateTaskOptions{
-		ID:         alarm.ID,
+		ID:         alarm.Version,
 		Type:       client.BatchTask,
 		DBRPs:      dbrps,
 		TICKscript: tick,
 		Status:     status,
 	}
 
-	config := client.Config{
-		URL:     k.hashKapacitor(alarm.ID),
-		Timeout: time.Duration(3) * time.Second,
+	url := k.hashKapacitor(alarm.Version)
+	c, ok := k.Clients[url]
+	if !ok {
+		log.Errorf("get cache kapacitor %s client failed", url)
+		return fmt.Errorf("get cache kapacitor %s client failed", url)
 	}
-	c, err := client.New(config)
-	if err != nil {
-		log.Errorf("new kapacitor %s client failed: %s", "url", err)
-	}
-
+	log.Infof("create task:%s at %s", alarm.Version, url)
 	_, err = c.CreateTask(createOpts)
+	if err != nil {
+		log.Errorf("create task at %s failed:%s", url, err)
+	}
 	return err
+}
+
+func (k *Kapacitor) RemoveTask(task client.Task) error {
+	url := k.hashKapacitor(task.ID)
+	c, ok := k.Clients[url]
+	if !ok {
+		log.Errorf("get cache kapacitor %s client failed", url)
+		return fmt.Errorf("get cache kapacitor %s client failed", url)
+	}
+	return c.DeleteTask(c.TaskLink(task.ID))
 }
 
 func (k *Kapacitor) hashKapacitor(id string) string {
@@ -111,7 +155,7 @@ batch
         .groupBy(time(1m),'host')
     |alert()
         .crit(lambda: "%s" %s %s)
-        .post(%s)
+        .post('%s')
         .slack()`
 	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement,
 		alarm.Period, alarm.Every, alarm.Func, alarm.Expression, alarm.Value, alertURL)

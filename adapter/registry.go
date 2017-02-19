@@ -29,9 +29,9 @@ func NewRegistry(addr string) *Registry {
 	return r
 }
 
-func (r *Registry) Alarms() ([]models.Alarm, error) {
+func (r *Registry) Alarms() (map[string]models.Alarm, error) {
 	var resp Resp
-	var alarms []models.Alarm
+	alarms := make(map[string]models.Alarm)
 	url := fmt.Sprintf("%s/api/v1/agent/resource?ns=leaf.test.loda&type=alarm", r.Addr)
 	response, err := requests.Get(url)
 	if err != nil {
@@ -43,7 +43,9 @@ func (r *Registry) Alarms() ([]models.Alarm, error) {
 		if err != nil {
 			return alarms, err
 		}
-		alarms = resp.Data
+		for _, a := range resp.Data {
+			alarms[a.Version] = a
+		}
 		return alarms, nil
 	}
 

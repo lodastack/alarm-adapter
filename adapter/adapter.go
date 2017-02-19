@@ -1,32 +1,30 @@
 package adapter
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/lodastack/alarm-adapter/config"
+
+	"github.com/lodastack/log"
 )
 
 const defaultInterval = 1
 
 func Start() {
-	//k := NewKapacitor(config.C.Main.KapacitorAddr)
+	k := NewKapacitor(config.C.Main.KapacitorAddr)
 	r := NewRegistry(config.C.Main.RegistryAddr)
 
-	var ticker *time.Ticker
-	duration := time.Duration(defaultInterval) * time.Minute
-	ticker = time.NewTicker(duration)
+	ticker := time.NewTicker(time.Duration(defaultInterval) * time.Minute)
 	for {
 		select {
 		case <-ticker.C:
-			//fmt.Printf("%v\n", k.Tasks())
+			tasks := k.Tasks()
 			alarms, err := r.Alarms()
 			if err != nil {
-				fmt.Println(err)
-				return
+				log.Errorf("get alarms failed:%s", err)
+			} else {
+				go k.Work(tasks, alarms)
 			}
-			res, _ := GenTick(alarms[0])
-			fmt.Printf("%s", res)
 		}
 	}
 }
