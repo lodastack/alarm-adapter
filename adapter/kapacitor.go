@@ -10,7 +10,7 @@ import (
 	"github.com/influxdata/kapacitor/client/v1"
 )
 
-const alertURL = "http://api.msg.ifengidc.com:7989/sendRTX"
+const alertURL = "http://test.com/send"
 
 type Kapacitor struct {
 	Addrs   []string
