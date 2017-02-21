@@ -1,6 +1,7 @@
 [main]
+	alarmNS       = "alarm.monitor.loda"
 	registryAddr  = "http://registry.test.com"
-	kapacitorAddr = ["http://kapacitor.test.com:9002"]
+	alarmAddr     = ""
 
 
 [log]
