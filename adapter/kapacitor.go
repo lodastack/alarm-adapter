@@ -12,7 +12,6 @@ import (
 	"github.com/influxdata/kapacitor/client/v1"
 )
 
-const sep = "__"
 const root = "loda"
 const schemaURL = "http://%s:9092"
 
@@ -147,7 +146,7 @@ func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
 }
 
 func (k *Kapacitor) RemoveTask(task client.Task) error {
-	if !strings.Contains(task.ID, root+sep) {
+	if !strings.Contains(task.ID, root+models.VersionSep) {
 		log.Errorf("this task not belong to loda: %s", task.ID)
 		return fmt.Errorf("this task not belong to loda: %s", task.ID)
 	}
@@ -179,11 +178,7 @@ func (k *Kapacitor) hashKapacitor(id string) string {
 }
 
 func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
-	list := strings.Split(alarm.Version, sep)
-	if len(list) < 2 {
-		return "", fmt.Errorf("invalid task ID")
-	}
-	if list[1] == "agent.alive" {
+	if alarm.Trigger == models.DeadMan {
 		batch := `
 var data = batch
     |query('''
