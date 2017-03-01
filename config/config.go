@@ -31,6 +31,7 @@ var (
 
 type Config struct {
 	Main MainConfig `toml:"main"`
+	Ping PingConfig `toml:"ping"`
 	Log  LogConfig  `toml:"log"`
 }
 
@@ -38,6 +39,10 @@ type MainConfig struct {
 	AlarmNS      string `toml:"alarmNS"`
 	AlarmAddr    string `toml:"alarmAddr"`
 	RegistryAddr string `toml:"registryAddr"`
+}
+
+type PingConfig struct {
+	IpList []string `toml:"ipList"`
 }
 
 type LogConfig struct {
