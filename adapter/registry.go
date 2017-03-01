@@ -49,7 +49,7 @@ func NewRegistry(addr string, alarmNS string) *Registry {
 func (r *Registry) Alarms() (map[string]models.Alarm, error) {
 	var resp RespAlarm
 	alarms := make(map[string]models.Alarm)
-	url := fmt.Sprintf("%s/api/v1/agent/resource?ns=%s&type=alarm", r.Addr, root)
+	url := fmt.Sprintf("%s/api/v1/alarm/resource?ns=%s&type=alarm", r.Addr, root)
 	response, err := requests.Get(url)
 	if err != nil {
 		return alarms, err
@@ -72,7 +72,7 @@ func (r *Registry) Alarms() (map[string]models.Alarm, error) {
 func (r *Registry) AlarmServers() ([]string, error) {
 	var resp RespMachine
 	var servers []string
-	url := fmt.Sprintf("%s/api/v1/agent/resource?ns=%s&type=machine", r.Addr, r.AlarmNS)
+	url := fmt.Sprintf("%s/api/v1/alarm/resource?ns=%s&type=machine", r.Addr, r.AlarmNS)
 	response, err := requests.Get(url)
 	if err != nil {
 		return servers, err

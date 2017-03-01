@@ -3,9 +3,11 @@
 	registryAddr  = "http://registry.test.com"
 	alarmAddr     = ""
 
+[ping]
+	ipList        = ["10.50.","10.90."]
 
 [log]
-	logdir = "/tmp/alarm-adapter/log"
-	loglevel = "DEBUG"
-	logrotatenum = 5
+	logdir        = "/tmp/alarm-adapter/log"
+	loglevel      = "DEBUG"
+	logrotatenum  = 5
 	logrotatesize = 1887436800

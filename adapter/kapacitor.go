@@ -34,8 +34,8 @@ func NewKapacitor(addrs []string, alarmAddr string) *Kapacitor {
 }
 
 func (k *Kapacitor) SetAddr(addrs []string) {
-	k.mu.RLock()
-	defer k.mu.RUnlock()
+	k.mu.Lock()
+	defer k.mu.Unlock()
 	log.Infof("start update old clients: %v", k.Addrs)
 	c := NewConsistent()
 	clients := make(map[string]*client.Client)
