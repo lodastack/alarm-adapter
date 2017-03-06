@@ -1,9 +1,13 @@
 [main]
-	alarmNS       = "alarm.monitor.loda"
 	registryAddr  = "http://registry.test.com"
+	
+[alarm]
+	enable        = false
+	NS            = "alarm.monitor.loda"
 	alarmAddr     = ""
 
 [ping]
+	enable        = false
 	ipList        = ["10.50.","10.90."]
 
 [log]

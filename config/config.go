@@ -30,18 +30,24 @@ var (
 )
 
 type Config struct {
-	Main MainConfig `toml:"main"`
-	Ping PingConfig `toml:"ping"`
-	Log  LogConfig  `toml:"log"`
+	Main  MainConfig  `toml:"main"`
+	Alarm AlarmConfig `toml:"alarm"`
+	Ping  PingConfig  `toml:"ping"`
+	Log   LogConfig   `toml:"log"`
 }
 
 type MainConfig struct {
-	AlarmNS      string `toml:"alarmNS"`
-	AlarmAddr    string `toml:"alarmAddr"`
 	RegistryAddr string `toml:"registryAddr"`
 }
 
+type AlarmConfig struct {
+	Enable    bool   `toml:"enable"`
+	NS        string `toml:"NS"`
+	AlarmAddr string `toml:"alarmAddr"`
+}
+
 type PingConfig struct {
+	Enable bool     `toml:"enable"`
 	IpList []string `toml:"ipList"`
 }
 
