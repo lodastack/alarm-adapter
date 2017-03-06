@@ -12,12 +12,16 @@ const defaultInterval = 1
 const updateInterval = 3
 
 func Start() {
-	r := NewRegistry(config.C.Main.RegistryAddr, config.C.Main.AlarmNS)
+	if !config.C.Alarm.Enable {
+		log.Infof("alarm module not enabled")
+		return
+	}
+	r := NewRegistry(config.C.Main.RegistryAddr, config.C.Alarm.NS)
 	servers, err := r.AlarmServers()
 	if err != nil {
 		panic(err)
 	}
-	k := NewKapacitor(servers, config.C.Main.AlarmAddr)
+	k := NewKapacitor(servers, config.C.Alarm.AlarmAddr)
 
 	go updateAlarmServers(k, r)
 	ticker := time.NewTicker(time.Duration(defaultInterval) * time.Minute)

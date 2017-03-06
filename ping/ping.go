@@ -22,6 +22,10 @@ func init() {
 }
 
 func Start() {
+	if !config.C.Ping.Enable {
+		log.Infof("ping module not enabled")
+		return
+	}
 	r := NewRegistry(config.C.Main.RegistryAddr, config.C.Ping.IpList)
 	m := NewPingMaster()
 	workFunc := func() {
