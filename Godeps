@@ -1,7 +1,7 @@
 github.com/BurntSushi/toml 3883ac1ce943878302255f538fce319d23226223
 github.com/influxdata/kapacitor d9f8ac48b754bf3058dd04e451b0f4390639cefa
 github.com/lodastack/log b25a4d2e8c2235ee21a1663198a4b26c7f7b4aaa
-github.com/lodastack/models 415503d271958c3d910d4808e8e1b19e1f59a385
-github.com/lodastack/sdk-go bc63172a70aceca9364b79b9805d087ffaeb03dd
+github.com/lodastack/models 2ac53145efd70acb69bb299a640402544bd2cea2
+github.com/lodastack/sdk-go 58b4c40298f6573f0e017bdc230cd629101dd916
 github.com/oiooj/cli 942282e931e8286aa802a30b01fa7e16befb50f3
 github.com/pquerna/ffjson 184f78649ba053f484de46921391e6d0c6f5172f
