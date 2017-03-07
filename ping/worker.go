@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/lodastack/log"
+	"github.com/lodastack/models"
 	"github.com/lodastack/sdk-go"
 )
 
@@ -118,7 +119,7 @@ func (w *PingWorker) Run() {
 	pingfunc := func() {
 		loss := Ping(w.ip, DefaultTimeout)
 		go Send(w.ns, w.hostname, loss)
-		log.Infof("Ping [%s] %s  %s Loss:%v", w.ns, w.ip, w.hostname, loss)
+		log.Debugf("Ping [%s] %s  %s Loss:%v", w.ns, w.ip, w.hostname, loss)
 	}
 
 	pingfunc()
@@ -157,16 +158,8 @@ func serverExist(name string, m map[string][]Server) bool {
 	return false
 }
 
-type Metric struct {
-	Name      string            `json:"name"`
-	Timestamp int64             `json:"timestamp"`
-	Tags      map[string]string `json:"tags"`
-	Value     interface{}       `json:"value"`
-	Offset    int64             `json:"offset,omitempty"`
-}
-
 func Send(ns string, hostname string, loss int) error {
-	m := Metric{
+	m := models.Metric{
 		Name:      "ping.loss",
 		Timestamp: time.Now().Unix(),
 		Tags: map[string]string{
@@ -175,7 +168,7 @@ func Send(ns string, hostname string, loss int) error {
 		},
 		Value: loss,
 	}
-	data, err := json.Marshal([]Metric{m})
+	data, err := json.Marshal([]models.Metric{m})
 	if err != nil {
 		return err
 	}

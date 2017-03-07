@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/lodastack/alarm-adapter/APIStatus"
 	"github.com/lodastack/alarm-adapter/adapter"
 	"github.com/lodastack/alarm-adapter/config"
 	"github.com/lodastack/alarm-adapter/ping"
@@ -60,6 +61,7 @@ func runStart(c *cli.Context) {
 	//start main
 	go adapter.Start()
 	go ping.Start()
+	go api.Start()
 	select {}
 }
 

@@ -33,6 +33,7 @@ type Config struct {
 	Main  MainConfig  `toml:"main"`
 	Alarm AlarmConfig `toml:"alarm"`
 	Ping  PingConfig  `toml:"ping"`
+	API   APIConfig   `toml:"api"`
 	Log   LogConfig   `toml:"log"`
 }
 
@@ -49,6 +50,10 @@ type AlarmConfig struct {
 type PingConfig struct {
 	Enable bool     `toml:"enable"`
 	IpList []string `toml:"ipList"`
+}
+
+type APIConfig struct {
+	Enable bool `toml:"enable"`
 }
 
 type LogConfig struct {
