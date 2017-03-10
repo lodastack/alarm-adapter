@@ -192,10 +192,10 @@ data
     |deadman(10.0, 60s)
 data
     |alert()
-        .post('%s')
+        .post('%s?version=%s')
         .slack()`
 		res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement,
-			alarm.Period, alarm.Every, alarm.GroupBy, k.AlarmAddr)
+			alarm.Period, alarm.Every, alarm.GroupBy, k.AlarmAddr, alarm.Version)
 		return res, nil
 	}
 
@@ -210,9 +210,9 @@ batch
         .groupBy(%s)
     |alert()
         .crit(lambda: "%s" %s %s)
-        .post('%s')
+        .post('%s?version=%s')
         .slack()`
 	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement,
-		alarm.Period, alarm.Every, alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, k.AlarmAddr)
+		alarm.Period, alarm.Every, alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, k.AlarmAddr, alarm.Version)
 	return res, nil
 }
