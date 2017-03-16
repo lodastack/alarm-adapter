@@ -12,6 +12,7 @@
 
 [api]
 	enable        = false
+	NS            = ["api.loda"]
 
 [log]
 	logdir        = "/tmp/alarm-adapter/log"

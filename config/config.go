@@ -53,7 +53,8 @@ type PingConfig struct {
 }
 
 type APIConfig struct {
-	Enable bool `toml:"enable"`
+	Enable bool     `toml:"enable"`
+	NS     []string `toml:"NS"`
 }
 
 type LogConfig struct {
