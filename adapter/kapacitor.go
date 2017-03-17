@@ -178,12 +178,16 @@ func (k *Kapacitor) hashKapacitor(id string) string {
 }
 
 func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
+	var queryWhere string
+	if alarm.Where != "" {
+		queryWhere = "WHERE " + alarm.Where
+	}
 	if alarm.Trigger == models.DeadMan {
 		batch := `
 var data = batch
     |query('''
         SELECT %s(value)
-        FROM "%s"."%s"."%s"
+        FROM "%s"."%s"."%s" %s
     ''')
         .period(%s)
         .every(%s)
@@ -194,7 +198,7 @@ data
     |alert()
         .post('%s?version=%s')
         .slack()`
-		res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement,
+		res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
 			alarm.Period, alarm.Every, alarm.GroupBy, k.AlarmAddr, alarm.Version)
 		return res, nil
 	}
@@ -203,7 +207,7 @@ data
 batch
     |query('''
         SELECT %s(value)
-        FROM "%s"."%s"."%s"
+        FROM "%s"."%s"."%s" %s
     ''')
         .period(%s)
         .every(%s)
@@ -212,7 +216,7 @@ batch
         .crit(lambda: "%s" %s %s)
         .post('%s?version=%s')
         .slack()`
-	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement,
+	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
 		alarm.Period, alarm.Every, alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, k.AlarmAddr, alarm.Version)
 	return res, nil
 }
