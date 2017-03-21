@@ -13,6 +13,7 @@ import (
 	"github.com/lodastack/alarm-adapter/adapter"
 	"github.com/lodastack/alarm-adapter/config"
 	"github.com/lodastack/alarm-adapter/ping"
+	"github.com/lodastack/alarm-adapter/snmp"
 	"github.com/lodastack/log"
 
 	"github.com/oiooj/cli"
@@ -62,6 +63,7 @@ func runStart(c *cli.Context) {
 	go adapter.Start()
 	go ping.Start()
 	go api.Start()
+	go snmp.Start()
 	select {}
 }
 
