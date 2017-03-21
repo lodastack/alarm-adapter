@@ -74,7 +74,9 @@ func (m *icmpMessage) Marshal() ([]byte, error) {
 }
 
 // parseICMPMessage parses b as an ICMP message.
-func parseICMPMessage(b []byte) (*icmpMessage, error) {
+func parseICMPMessage(_b []byte) (*icmpMessage, error) {
+	b := make([]byte, len(_b))
+	copy(b, _b)
 	msglen := len(b)
 	if msglen < 4 {
 		return nil, errors.New("message too short")
