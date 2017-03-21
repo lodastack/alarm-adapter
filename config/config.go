@@ -34,6 +34,7 @@ type Config struct {
 	Alarm AlarmConfig `toml:"alarm"`
 	Ping  PingConfig  `toml:"ping"`
 	API   APIConfig   `toml:"api"`
+	SNMP  SNMPConfig  `toml"snmp"`
 	Log   LogConfig   `toml:"log"`
 }
 
@@ -55,6 +56,13 @@ type PingConfig struct {
 type APIConfig struct {
 	Enable bool     `toml:"enable"`
 	NS     []string `toml:"NS"`
+}
+
+type SNMPConfig struct {
+	Enable    bool     `toml:"enable"`
+	NS        []string `toml:"NS"`
+	IpList    []string `toml:"ipList"`
+	Community string   `toml:"community"`
 }
 
 type LogConfig struct {
