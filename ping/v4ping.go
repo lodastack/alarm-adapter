@@ -74,15 +74,13 @@ func (m *icmpMessage) Marshal() ([]byte, error) {
 }
 
 // parseICMPMessage parses b as an ICMP message.
-func parseICMPMessage(_b []byte) (*icmpMessage, error) {
-	b := make([]byte, len(_b))
-	copy(b, _b)
+func parseICMPMessage(b []byte) (*icmpMessage, error) {
 	msglen := len(b)
 	if msglen < 4 {
 		return nil, errors.New("message too short")
 	}
 	m := &icmpMessage{Type: int(b[0]), Code: int(b[1]), Checksum: int(b[2])<<8 | int(b[3])}
-	if msglen > 4 {
+	if len(b) > 4 {
 		var err error
 		switch m.Type {
 		case icmpv4EchoRequest, icmpv4EchoReply, icmpv6EchoRequest, icmpv6EchoReply:
