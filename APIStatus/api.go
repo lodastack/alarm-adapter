@@ -14,7 +14,7 @@ func Start() {
 		log.Infof("monitor API module not enabled")
 		return
 	}
-	r := NewRegistry(config.C.Main.RegistryAddr, config.C.API.NS)
+	r := NewRegistry(config.C.Main.RegistryAddr, config.C.API.NS, config.C.API.Global)
 	m := NewAPIMaster()
 
 	workFunc := func() {

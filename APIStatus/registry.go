@@ -15,6 +15,7 @@ const defaultPullInterval = 2
 type Registry struct {
 	Addr     string
 	NS       []string
+	Global   bool
 	Interval int
 }
 
@@ -28,17 +29,45 @@ type RespCollect struct {
 	Data   []map[string]string `json:"data"`
 }
 
-func NewRegistry(addr string, ns []string) *Registry {
+func NewRegistry(addr string, ns []string, g bool) *Registry {
 	r := &Registry{
 		Addr:     addr,
 		NS:       ns,
+		Global:   g,
 		Interval: defaultPullInterval,
 	}
 	return r
 }
 
+func (r *Registry) NameSpaces() ([]string, error) {
+	var resp RespNS
+	var ns []string
+	url := fmt.Sprintf("%s/api/v1/alarm/ns?format=list", r.Addr)
+	response, err := requests.Get(url)
+	if err != nil {
+		return ns, err
+	}
+
+	if response.Status == 200 {
+		err = json.Unmarshal(response.Body, &resp)
+		if err != nil {
+			return ns, err
+		}
+		return resp.Data, nil
+	}
+	return ns, fmt.Errorf("get all ns failed: code %d", response.Status)
+}
+
 func (r *Registry) APIs() (map[string][]models.HTTPResponse, error) {
 	apisMap := make(map[string][]models.HTTPResponse)
+
+	if r.Global {
+		ns, err := r.NameSpaces()
+		if err != nil {
+			return apisMap, err
+		}
+		r.NS = ns
+	}
 
 	for _, leaf := range r.NS {
 		var resp RespCollect

@@ -55,6 +55,7 @@ type PingConfig struct {
 
 type APIConfig struct {
 	Enable bool     `toml:"enable"`
+	Global bool     `toml:"global"`
 	NS     []string `toml:"NS"`
 }
 
