@@ -12,6 +12,7 @@
 
 [api]
 	enable        = false
+	global        = false
 	NS            = ["api.loda"]
 
 [snmp]

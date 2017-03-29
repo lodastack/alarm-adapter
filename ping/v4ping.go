@@ -165,8 +165,9 @@ func Pinger(address string, timeout int) error {
 		return err
 	}
 	var m *icmpMessage
-	rb := make([]byte, 20+len(wb))
+
 	for {
+		rb := make([]byte, 20+len(wb))
 		if _, err = c.Read(rb); err != nil {
 			return err
 		}
