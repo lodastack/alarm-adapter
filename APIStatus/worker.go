@@ -22,7 +22,9 @@ const DefaultMonitorInterval = 60
 
 // unit: second
 // individual target initial timeout
-const DefaultTimeout = 3
+const DefaultTimeout = 5
+const MinTimeout = 3
+const MaxTimeout = 20
 
 type APIMaster struct {
 	workers map[string]*APIWorker
@@ -165,7 +167,7 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 		log.Errorf("convert string to int failed：%s", err)
 		interval = DefaultTimeout
 	}
-	if interval < DefaultTimeout {
+	if interval < MinTimeout || interval > MaxTimeout {
 		interval = DefaultTimeout
 	}
 	tr := &http.Transport{
