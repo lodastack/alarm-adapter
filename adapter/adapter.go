@@ -21,7 +21,7 @@ func Start() {
 	if err != nil {
 		panic(err)
 	}
-	k := NewKapacitor(servers, config.C.Alarm.AlarmAddr)
+	k := NewKapacitor(servers, config.C.Alarm.EventAddr)
 
 	go updateAlarmServers(k, r)
 	ticker := time.NewTicker(time.Duration(defaultInterval) * time.Minute)

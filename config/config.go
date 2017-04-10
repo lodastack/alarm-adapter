@@ -45,7 +45,7 @@ type MainConfig struct {
 type AlarmConfig struct {
 	Enable    bool   `toml:"enable"`
 	NS        string `toml:"NS"`
-	AlarmAddr string `toml:"alarmAddr"`
+	EventAddr string `toml:"eventAddr"`
 }
 
 type PingConfig struct {
