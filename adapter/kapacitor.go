@@ -17,7 +17,7 @@ const schemaURL = "http://%s:9092"
 
 type Kapacitor struct {
 	Addrs     []string
-	AlarmAddr string
+	EventAddr string
 
 	mu      sync.RWMutex
 	Clients map[string]*client.Client
@@ -25,9 +25,9 @@ type Kapacitor struct {
 	Hash *Consistent
 }
 
-func NewKapacitor(addrs []string, alarmAddr string) *Kapacitor {
+func NewKapacitor(addrs []string, eventAddr string) *Kapacitor {
 	k := &Kapacitor{
-		AlarmAddr: alarmAddr,
+		EventAddr: eventAddr,
 	}
 	k.SetAddr(addrs)
 	return k
@@ -74,6 +74,7 @@ func (k *Kapacitor) Tasks() map[string]client.Task {
 		}
 		var listOpts client.ListTasksOptions
 		listOpts.Default()
+		listOpts.Limit = -1
 		ts, err := c.ListTasks(&listOpts)
 		if err != nil {
 			log.Errorf("list kapacitor %s client failed: %s", url, err)
@@ -199,7 +200,7 @@ data
         .post('%s?version=%s')
         .slack()`
 		res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
-			alarm.Period, alarm.Every, alarm.GroupBy, k.AlarmAddr, alarm.Version)
+			alarm.Period, alarm.Every, alarm.GroupBy, k.EventAddr, alarm.Version)
 		return res, nil
 	}
 
@@ -217,6 +218,6 @@ batch
         .post('%s?version=%s')
         .slack()`
 	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
-		alarm.Period, alarm.Every, alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, k.AlarmAddr, alarm.Version)
+		alarm.Period, alarm.Every, alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, k.EventAddr, alarm.Version)
 	return res, nil
 }
