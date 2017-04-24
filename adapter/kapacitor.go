@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -178,11 +179,31 @@ func (k *Kapacitor) hashKapacitor(id string) string {
 	return choose
 }
 
+func genTimeLambda(STime, ETime string) string {
+	if STime == "" || ETime == "" {
+		return ""
+	}
+	stime, errStime := strconv.Atoi(STime)
+	etime, errEtime := strconv.Atoi(ETime)
+	if stime == etime || errStime != nil || errEtime != nil {
+		log.Warningf("gen time lambda for tick fail, stime: %s, etime: %s", STime, ETime)
+		return ""
+	}
+
+	condition := "AND"
+	if stime > etime {
+		condition = "OR"
+	}
+	return fmt.Sprintf("AND (hour(\"time\") >= %s %s hour(\"time\") <= %s)", STime, condition, ETime)
+}
+
 func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
 	var queryWhere string
 	if alarm.Where != "" {
 		queryWhere = "WHERE " + alarm.Where
 	}
+	timeLambda := genTimeLambda(alarm.STime, alarm.ETime)
+
 	if alarm.Trigger == models.DeadMan {
 		batch := `
 var data = batch
@@ -214,10 +235,10 @@ batch
         .every(%s)
         .groupBy(%s)
     |alert()
-        .crit(lambda: "%s" %s %s)
+        .crit(lambda: "%s" %s %s %s)
         .post('%s?version=%s')
         .slack()`
-	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
-		alarm.Period, alarm.Every, alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, k.EventAddr, alarm.Version)
+	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
+		alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
 	return res, nil
 }
