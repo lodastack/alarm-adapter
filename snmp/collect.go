@@ -129,7 +129,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 	}
 
 	point_in := models.Metric{
-		Name:      "net.traffic",
+		Name:      "net.traffic." + hostname,
 		Timestamp: time.Now().Unix(),
 		Tags: map[string]string{
 			"from": Hostname,
@@ -141,7 +141,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 	}
 
 	point_out := models.Metric{
-		Name:      "net.traffic",
+		Name:      "net.traffic." + hostname,
 		Timestamp: time.Now().Unix(),
 		Tags: map[string]string{
 			"from": Hostname,
