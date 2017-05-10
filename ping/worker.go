@@ -158,7 +158,7 @@ func serverExist(name string, m map[string][]Server) bool {
 	return false
 }
 
-func Send(ns string, hostname string, loss int) error {
+func Send(ns string, hostname string, loss float64) error {
 	m := models.Metric{
 		Name:      "ping.loss",
 		Timestamp: time.Now().Unix(),
