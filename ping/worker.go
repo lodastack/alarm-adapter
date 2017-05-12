@@ -118,7 +118,7 @@ func (w *PingWorker) Run() {
 
 	pingfunc := func() {
 		loss := Ping(w.ip, DefaultTimeout)
-		go Send(w.ns, w.hostname, loss)
+		go Send(w.ns, w.hostname, w.ip, loss)
 		log.Debugf("Ping [%s] %s  %s Loss:%v", w.ns, w.ip, w.hostname, loss)
 	}
 
@@ -158,12 +158,13 @@ func serverExist(name string, m map[string][]Server) bool {
 	return false
 }
 
-func Send(ns string, hostname string, loss float64) error {
+func Send(ns string, hostname string, ip string, loss float64) error {
 	m := models.Metric{
 		Name:      "ping.loss",
 		Timestamp: time.Now().Unix(),
 		Tags: map[string]string{
 			"from": Hostname,
+			"ip":   ip,
 			"host": hostname,
 		},
 		Value: loss,
