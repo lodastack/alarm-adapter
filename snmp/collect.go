@@ -85,7 +85,7 @@ func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip stri
 	// ifHCInOctets
 	in_resp, in_err := s.Walk(OID_INF_TRAFFIC_IN)
 	out_resp, out_err := s.Walk(OID_INF_TRAFFIC_OUT)
-	if in_err == nil && out_err == nil && len(in_resp) == len(NetworkInfs) && len(out_resp) == len(NetworkInfs) {
+	if in_err == nil && out_err == nil && len(in_resp) <= len(NetworkInfs) && len(in_resp) <= len(out_resp) {
 		for i, netinterface := range in_resp {
 			var one NetworkTraffic
 			one.oid = netinterface.Name
@@ -104,7 +104,7 @@ func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip stri
 			points = append(points, MakePoint(ns, one, NetworkInfs[i], ip, hostname)...)
 		}
 	} else {
-		log.Errorf("Get net interface in traffic failed: IN: %s Out: %s len(in_resp): %d len(NetworkInfs): %d", in_err, out_err, len(in_resp), len(NetworkInfs))
+		log.Errorf("Get %s interface in traffic failed: IN: %s Out: %s len(in_resp): %d len(NetworkInfs): %d", ip, in_err, out_err, len(in_resp), len(NetworkInfs))
 	}
 	return
 }
