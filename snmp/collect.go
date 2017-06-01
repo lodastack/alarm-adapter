@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lodastack/alarm-adapter/report"
 	"github.com/lodastack/models"
 	"github.com/lodastack/sdk-go"
 
@@ -45,6 +46,7 @@ func traffic(ns string, ip string, hostname string, community string) {
 	NetworkInfs := FetchInfs(s)
 	Points := FetchTraffic(ns, s, NetworkInfs, ip, hostname)
 	go Send(ns, Points)
+	go report.Report(hostname, ip, ns)
 }
 
 type NetworkInf struct {
