@@ -137,7 +137,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_IN,
 		},
-		Value: (t.invalue - historymap[inkey]) / (int64)(DefaultInterval),
+		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
 	}
 
 	point_out := models.Metric{
@@ -149,7 +149,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_OUT,
 		},
-		Value: (t.outvalue - historymap[outkey]) / (int64)(DefaultInterval),
+		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
 	}
 
 	historymap[outkey] = t.outvalue
