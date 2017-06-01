@@ -20,7 +20,7 @@ const (
 	OID_INF_TRAFFIC_OUT = "1.3.6.1.2.1.31.1.1.1.10"
 	OID_SYS_HOSTNAME    = ".1.3.6.1.2.1.1.5.0"
 
-	SNMP_TIMEOUT int64 = 3 //unit: sec
+	SNMP_TIMEOUT int64 = 10 //unit: sec
 
 	TYPE_IN  = "in"
 	TYPE_OUT = "out"
