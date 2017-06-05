@@ -19,6 +19,7 @@ const (
 	OID_INF_INFO        = ".1.3.6.1.2.1.2.2.1.2"
 	OID_INF_TRAFFIC_IN  = "1.3.6.1.2.1.31.1.1.1.6"
 	OID_INF_TRAFFIC_OUT = "1.3.6.1.2.1.31.1.1.1.10"
+	OID_INF_STATUS      = ".1.3.6.1.2.1.2.2.1.8"
 	OID_SYS_HOSTNAME    = ".1.3.6.1.2.1.1.5.0"
 
 	SNMP_TIMEOUT int64 = 10 //unit: sec
@@ -81,13 +82,18 @@ type NetworkTraffic struct {
 	valuetype string
 	invalue   int64
 	outvalue  int64
+	status    int
 }
 
 func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip string, hostname string) (points []models.Metric) {
 	// ifHCInOctets
 	in_resp, in_err := s.Walk(OID_INF_TRAFFIC_IN)
 	out_resp, out_err := s.Walk(OID_INF_TRAFFIC_OUT)
-	if in_err == nil && out_err == nil && len(in_resp) <= len(NetworkInfs) && len(in_resp) <= len(out_resp) {
+	status_resp, status_err := s.Walk(OID_INF_STATUS)
+
+	if in_err == nil && out_err == nil && status_err == nil &&
+		len(in_resp) <= len(NetworkInfs) && len(in_resp) <= len(out_resp) &&
+		len(in_resp) <= len(status_resp) {
 		for i, netinterface := range in_resp {
 			var one NetworkTraffic
 			one.oid = netinterface.Name
@@ -101,6 +107,10 @@ func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip stri
 			one.outvalue, ok = out_resp[i].Value.(int64)
 			if !ok {
 				log.Errorf("out traffic type is not int64 : %v", out_resp[i].Value)
+			}
+			one.status, ok = status_resp[i].Value.(int)
+			if !ok {
+				log.Errorf("inf status is not int64 : %v", status_resp[i].Value)
 			}
 			log.Infof("NetworkInfs len = %d, index = %d", len(NetworkInfs), i)
 			points = append(points, MakePoint(ns, one, NetworkInfs[i], ip, hostname)...)
@@ -154,11 +164,22 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
 	}
 
+	point_status := models.Metric{
+		Name:      "net.infStatus",
+		Timestamp: time.Now().Unix(),
+		Tags: map[string]string{
+			"host": hostname,
+			"if":   i.name,
+		},
+		Value: t.status,
+	}
+
 	historymap[outkey] = t.outvalue
 	historymap[inkey] = t.invalue
 
 	pair = append(pair, point_in)
 	pair = append(pair, point_out)
+	pair = append(pair, point_status)
 
 	log.Infof("make points: [ip:%s, if:%s, in-traffic:%d, out-traffic:%d]", ip, i.name, t.invalue, t.outvalue)
 	return pair
