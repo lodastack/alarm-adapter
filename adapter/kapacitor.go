@@ -204,7 +204,9 @@ func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
 	}
 	timeLambda := genTimeLambda(alarm.STime, alarm.ETime)
 
-	if alarm.Trigger == models.DeadMan {
+	var res string
+	switch alarm.Trigger {
+	case models.DeadMan:
 		batch := `
 var data = batch
     |query('''
@@ -220,12 +222,28 @@ data
     |alert()
         .post('%s?version=%s')
         .slack()`
-		res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
+		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
 			alarm.Period, alarm.Every, alarm.GroupBy, k.EventAddr, alarm.Version)
-		return res, nil
-	}
 
-	batch := `
+	case models.Relative:
+		batch := `
+batch
+    |query('''
+        SELECT (max("value")-min("value")) as diff
+        FROM "%s"."%s"."%s" %s
+    ''')
+        .period(%s)
+        .every(%s)
+        .groupBy(%s)
+    |alert()
+        .crit(lambda: "diff" %s %s %s)
+        .post('%s?version=%s')
+        .slack()`
+		res = fmt.Sprintf(batch, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
+			alarm.GroupBy, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
+
+	case models.ThresHold:
+		batch := `
 batch
     |query('''
         SELECT %s(value)
@@ -238,7 +256,10 @@ batch
         .crit(lambda: "%s" %s %s %s)
         .post('%s?version=%s')
         .slack()`
-	res := fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
-		alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
+		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
+			alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
+	default:
+		return "", fmt.Errorf("unknown alarm type: %s", models.DeadMan)
+	}
 	return res, nil
 }
