@@ -78,7 +78,6 @@ func (r *Registry) NameSpaces() []string {
 func (r *Registry) Servers() (map[string][]Server, error) {
 	serversMap := make(map[string][]Server)
 	for _, leaf := range r.NameSpaces() {
-		leaf := leaf + ".loda"
 		var resp RespMachine
 		var servers []Server
 		url := fmt.Sprintf("%s/api/v1/alarm/resource?ns=%s&type=machine", r.Addr, leaf)

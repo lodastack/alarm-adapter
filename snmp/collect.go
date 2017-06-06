@@ -17,6 +17,7 @@ import (
 const (
 	// SNMP OID CONST
 	OID_INF_INFO        = ".1.3.6.1.2.1.2.2.1.2"
+	OID_INF_INDEX       = "1.3.6.1.2.1.2.2.1.1"
 	OID_INF_TRAFFIC_IN  = "1.3.6.1.2.1.31.1.1.1.6"
 	OID_INF_TRAFFIC_OUT = "1.3.6.1.2.1.31.1.1.1.10"
 	OID_INF_STATUS      = ".1.3.6.1.2.1.2.2.1.8"
@@ -44,7 +45,7 @@ func traffic(ns string, ip string, hostname string, community string) {
 		log.Errorf("connect server %s failed: %s", ip, err.Error())
 		return
 	}
-	NetworkInfs := FetchInfs(s)
+	NetworkInfs := FetchInfIndex(s)
 	Points := FetchTraffic(ns, s, NetworkInfs, ip, hostname)
 	go Send(ns, Points)
 	go report.Report(hostname, ip, ns)
@@ -54,10 +55,11 @@ type NetworkInf struct {
 	oid       string
 	valuetype string
 	name      string
+	index     int
 }
 
-func FetchInfs(s *gosnmp.GoSNMP) (NetworkInfs []NetworkInf) {
-	resp, err := s.Walk(OID_INF_INFO)
+func FetchInfIndex(s *gosnmp.GoSNMP) (NetworkInfs []NetworkInf) {
+	resp, err := s.Walk(OID_INF_INDEX)
 	if err == nil {
 		for _, netinterface := range resp {
 			var one NetworkInf
@@ -65,9 +67,9 @@ func FetchInfs(s *gosnmp.GoSNMP) (NetworkInfs []NetworkInf) {
 			one.valuetype = string(netinterface.Type)
 			//avoid panic risk
 			var ok bool
-			one.name, ok = netinterface.Value.(string)
+			one.index, ok = netinterface.Value.(int)
 			if !ok {
-				log.Errorf("interface name type is not string : %v", netinterface.Value)
+				log.Errorf("interface index type is not int : %v", netinterface.Value)
 			}
 			NetworkInfs = append(NetworkInfs, one)
 		}
@@ -87,36 +89,56 @@ type NetworkTraffic struct {
 
 func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip string, hostname string) (points []models.Metric) {
 	// ifHCInOctets
-	in_resp, in_err := s.Walk(OID_INF_TRAFFIC_IN)
-	out_resp, out_err := s.Walk(OID_INF_TRAFFIC_OUT)
-	status_resp, status_err := s.Walk(OID_INF_STATUS)
 
-	if in_err == nil && out_err == nil && status_err == nil &&
-		len(in_resp) <= len(NetworkInfs) && len(in_resp) <= len(out_resp) &&
-		len(in_resp) <= len(status_resp) {
-		for i, netinterface := range in_resp {
-			var one NetworkTraffic
-			one.oid = netinterface.Name
-			one.valuetype = string(netinterface.Type)
-			//avoid panic risk
-			var ok bool
-			one.invalue, ok = netinterface.Value.(int64)
-			if !ok {
-				log.Errorf("in traffic type is not int64 : %v", netinterface.Value)
-			}
-			one.outvalue, ok = out_resp[i].Value.(int64)
-			if !ok {
-				log.Errorf("out traffic type is not int64 : %v", out_resp[i].Value)
-			}
-			one.status, ok = status_resp[i].Value.(int)
-			if !ok {
-				log.Errorf("inf status is not int64 : %v", status_resp[i].Value)
-			}
-			log.Infof("NetworkInfs len = %d, index = %d", len(NetworkInfs), i)
-			points = append(points, MakePoint(ns, one, NetworkInfs[i], ip, hostname)...)
+	for _, netinterface := range NetworkInfs {
+		var one NetworkTraffic
+		var ok bool
+
+		index := fmt.Sprintf("%d", netinterface.index)
+		info_resp, info_err := s.Get(fmt.Sprintf("%s.%s", OID_INF_INFO, index))
+		if info_err != nil {
+			log.Errorf("get interface info failed: %s", info_err)
+			continue
 		}
-	} else {
-		log.Errorf("Get %s interface in traffic failed: IN: %s Out: %s len(in_resp): %d len(NetworkInfs): %d", ip, in_err, out_err, len(in_resp), len(NetworkInfs))
+
+		if len(info_resp.Variables) > 0 {
+			one.oid, ok = info_resp.Variables[0].Value.(string)
+			netinterface.name = one.oid
+			if !ok {
+				log.Errorf("interface name type is not string : %v", info_resp.Variables[0].Value)
+			}
+		}
+
+		in_resp, in_err := s.Get(fmt.Sprintf("%s.%s", OID_INF_TRAFFIC_IN, index))
+		out_resp, out_err := s.Get(fmt.Sprintf("%s.%s", OID_INF_TRAFFIC_OUT, index))
+		status_resp, status_err := s.Get(fmt.Sprintf("%s.%s", OID_INF_STATUS, index))
+		if in_err != nil || out_err != nil || status_err != nil {
+			continue
+		}
+
+		//avoid panic risk
+		if len(in_resp.Variables) > 0 {
+			one.invalue, ok = in_resp.Variables[0].Value.(int64)
+			if !ok {
+				log.Errorf("in traffic type is not int64 : %v", in_resp.Variables[0].Value)
+			}
+		}
+
+		if len(out_resp.Variables) > 0 {
+			one.outvalue, ok = out_resp.Variables[0].Value.(int64)
+			if !ok {
+				log.Errorf("out traffic type is not int64 : %v", out_resp.Variables[0].Value)
+			}
+		}
+
+		if len(status_resp.Variables) > 0 {
+			one.status, ok = status_resp.Variables[0].Value.(int)
+			if !ok {
+				log.Errorf("inf status is not int64 : %v", status_resp.Variables[0].Value)
+			}
+		}
+		log.Infof("NetworkInfs index = %d", netinterface.index)
+		points = append(points, MakePoint(ns, one, netinterface, ip, hostname)...)
 	}
 	return
 }
