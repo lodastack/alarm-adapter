@@ -37,7 +37,7 @@ func Report(hostname string, ip string, ns string) {
 			log.Error("report agent info failed: ", err)
 		} else {
 			if resp.StatusCode == http.StatusOK {
-				log.Info("report agent info successfully")
+				log.Infof("report agent %s info successfully", ip)
 			} else {
 				log.Errorf("report agent info failed: StatusCode %d", resp.StatusCode)
 			}
