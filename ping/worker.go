@@ -42,7 +42,7 @@ func (master *PingMaster) Do(m map[string][]Server) {
 	for ns, servers := range m {
 		for _, server := range servers {
 			for _, ip := range server.IP {
-				if _, ok := master.workers[ns+ip]; !ok {
+				if _, ok := master.workers[ns+server.Hostname+ip]; !ok {
 					err := master.CreateWorker(ns, ip, server.Hostname)
 					if err != nil {
 						log.Errorf("master create worker failed: %s", err)
@@ -70,7 +70,7 @@ func (master *PingMaster) CreateWorker(ns string, ip string, hostname string) er
 	master.countmu.Lock()
 	master.count++
 	master.countmu.Unlock()
-	master.workers[ns+ip] = w
+	master.workers[ns+hostname+ip] = w
 	return nil
 }
 
@@ -134,7 +134,7 @@ func (w *PingWorker) Run() {
 	}
 
 exit:
-	log.Infof("Ping Worker %s exit", w.ns+w.ip)
+	log.Infof("Ping Worker %s exit", w.ns+w.hostname+w.ip)
 }
 
 func (w *PingWorker) Stop() {
@@ -149,7 +149,7 @@ func serverExist(name string, m map[string][]Server) bool {
 	for ns, servers := range m {
 		for _, server := range servers {
 			for _, ip := range server.IP {
-				if name == ns+ip {
+				if name == ns+server.Hostname+ip {
 					return true
 				}
 			}
