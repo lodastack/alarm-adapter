@@ -14,6 +14,7 @@ var Hostname string
 
 func init() {
 	historymap = make(map[string]int64)
+	lasttimemap = make(map[string]int64)
 	var err error
 	Hostname, err = os.Hostname()
 	if err != nil {
