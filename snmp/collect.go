@@ -30,8 +30,9 @@ const (
 )
 
 var (
-	historymap map[string]int64
-	mu         sync.RWMutex
+	historymap  map[string]int64
+	lasttimemap map[string]int64
+	mu          sync.RWMutex
 )
 
 type snmpServer struct {
@@ -146,19 +147,27 @@ func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip stri
 func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname string) (pair []models.Metric) {
 	mu.Lock()
 	defer mu.Unlock()
+	timekey := fmt.Sprint("%s%s", ns, ip)
 	inkey := fmt.Sprint("%s%s%s%s", ns, ip, i.name, TYPE_IN)
 	outkey := fmt.Sprint("%s%s%s%s", ns, ip, i.name, TYPE_OUT)
 	if _, ok := historymap[inkey]; !ok {
 		historymap[inkey] = t.invalue
 		historymap[outkey] = t.outvalue
+		lasttimemap[timekey] = time.Now().Unix()
 		log.Infof("history data init [%s %s]", ip, i.name)
 		return pair
 	}
 
-	if _, ok := historymap[outkey]; !ok {
-		historymap[inkey] = t.invalue
-		historymap[outkey] = t.outvalue
-		log.Infof("history data init [%s %s]", ip, i.name)
+	if _, ok := lasttimemap[timekey]; !ok {
+		lasttimemap[timekey] = time.Now().Unix()
+		log.Infof("history time data init [%s %s]", ns, ip)
+	}
+
+	if time.Now().Unix()-lasttimemap[timekey] > (int64)(DefaultInterval*1.5) {
+		log.Errorf("last time expired [%d]", lasttimemap[timekey])
+		lasttimemap[timekey] = time.Now().Unix()
+		delete(historymap, outkey)
+		delete(historymap, inkey)
 		return pair
 	}
 
@@ -198,6 +207,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 
 	historymap[outkey] = t.outvalue
 	historymap[inkey] = t.invalue
+	lasttimemap[timekey] = time.Now().Unix()
 
 	pair = append(pair, point_in)
 	pair = append(pair, point_out)
