@@ -19,7 +19,7 @@
 	enable        = false
 	NS            = ["switch.loda"]
 	ipList        = ["10.50.","10.90."]
-	community     = "test"
+	community     = ["test","test2"]
 
 
 [log]
