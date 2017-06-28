@@ -190,8 +190,32 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
 	}
 
+	point_in_normal := models.Metric{
+		Name:      "net.traffic",
+		Timestamp: time.Now().Unix(),
+		Tags: map[string]string{
+			"from": Hostname,
+			"host": hostname,
+			"if":   i.name,
+			"type": TYPE_IN,
+		},
+		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
+	}
+
 	point_out := models.Metric{
 		Name:      "net.traffic." + hostname,
+		Timestamp: time.Now().Unix(),
+		Tags: map[string]string{
+			"from": Hostname,
+			"host": hostname,
+			"if":   i.name,
+			"type": TYPE_OUT,
+		},
+		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
+	}
+
+	point_out_normal := models.Metric{
+		Name:      "net.traffic",
 		Timestamp: time.Now().Unix(),
 		Tags: map[string]string{
 			"from": Hostname,
@@ -218,6 +242,8 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 
 	pair = append(pair, point_in)
 	pair = append(pair, point_out)
+	pair = append(pair, point_in_normal)
+	pair = append(pair, point_out_normal)
 	pair = append(pair, point_status)
 
 	log.Infof("make points: [ip:%s, if:%s, in-traffic:%d, out-traffic:%d]", ip, i.name, t.invalue, t.outvalue)
