@@ -63,7 +63,7 @@ type SNMPConfig struct {
 	Enable    bool     `toml:"enable"`
 	NS        []string `toml:"NS"`
 	IpList    []string `toml:"ipList"`
-	Community string   `toml:"community"`
+	Community []string `toml:"community"`
 }
 
 type LogConfig struct {

@@ -12,7 +12,7 @@ import (
 const DefaultInterval = 60
 
 type SnmpMaster struct {
-	Community string
+	Community []string
 	workers   map[string]*SnmpWorker
 	mu        sync.RWMutex
 
@@ -20,7 +20,7 @@ type SnmpMaster struct {
 	count   int
 }
 
-func NewSnmpMaster(c string) *SnmpMaster {
+func NewSnmpMaster(c []string) *SnmpMaster {
 	return &SnmpMaster{
 		Community: c,
 		workers:   make(map[string]*SnmpWorker),
@@ -86,13 +86,13 @@ type SnmpWorker struct {
 	ns        string
 	ip        string
 	hostname  string
-	community string
+	community []string
 	interval  int
 	done      chan struct{}
 	opened    bool
 }
 
-func NewSnmpWorker(ns string, ip string, hostname string, c string) *SnmpWorker {
+func NewSnmpWorker(ns string, ip string, hostname string, c []string) *SnmpWorker {
 	return &SnmpWorker{
 		ns:        ns,
 		ip:        ip,
@@ -109,20 +109,20 @@ func (w *SnmpWorker) Run() {
 		return
 	}
 	w.opened = true
-	// LB all ping tasks
+	// LB all snmp tasks
 	randNum := rand.Intn(DefaultInterval * 1000)
 	time.Sleep(time.Duration(randNum) * time.Millisecond)
 
-	pingfunc := func() {
+	snmpfunc := func() {
 		traffic(w.ns, w.ip, w.hostname, w.community)
 	}
 
-	pingfunc()
+	snmpfunc()
 	ticker := time.NewTicker(time.Duration(DefaultInterval) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			pingfunc()
+			snmpfunc()
 		case <-w.done:
 			goto exit
 		}

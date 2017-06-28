@@ -40,8 +40,15 @@ type snmpServer struct {
 	community string
 }
 
-func traffic(ns string, ip string, hostname string, community string) {
-	s, err := gosnmp.NewGoSNMP(ip, community, gosnmp.Version2c, SNMP_TIMEOUT)
+func traffic(ns string, ip string, hostname string, community []string) {
+	var s *gosnmp.GoSNMP
+	var err error
+	for _, communityString := range community {
+		s, err = gosnmp.NewGoSNMP(ip, communityString, gosnmp.Version2c, SNMP_TIMEOUT)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		log.Errorf("connect server %s failed: %s", ip, err.Error())
 		return
