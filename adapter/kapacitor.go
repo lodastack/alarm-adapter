@@ -220,8 +220,7 @@ data
     |deadman(10.0, 60s)
 data
     |alert()
-        .post('%s?version=%s')
-        .slack()`
+        .post('%s?version=%s')`
 		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
 			alarm.Period, alarm.Every, alarm.GroupBy, k.EventAddr, alarm.Version)
 
@@ -237,8 +236,7 @@ batch
         .groupBy(%s)
     |alert()
         .crit(lambda: "diff" %s %s %s)
-        .post('%s?version=%s')
-        .slack()`
+        .post('%s?version=%s')`
 		res = fmt.Sprintf(batch, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
 			alarm.GroupBy, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
 
@@ -254,8 +252,7 @@ batch
         .groupBy(%s)
     |alert()
         .crit(lambda: "%s" %s %s %s)
-        .post('%s?version=%s')
-        .slack()`
+        .post('%s?version=%s')`
 		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
 			alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
 	default:
