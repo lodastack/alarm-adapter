@@ -53,6 +53,7 @@ func traffic(ns string, ip string, hostname string, community []string) {
 		log.Errorf("connect server %s failed: %s", ip, err.Error())
 		return
 	}
+	s.SetTimeout(50)
 	NetworkInfs := FetchInfIndex(s)
 	Points := FetchTraffic(ns, s, NetworkInfs, ip, hostname)
 	go Send(ns, Points)
