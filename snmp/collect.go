@@ -237,6 +237,16 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 		Value: t.status,
 	}
 
+	point_status_host := models.Metric{
+		Name:      "net.infStatus." + hostname,
+		Timestamp: time.Now().Unix(),
+		Tags: map[string]string{
+			"host": hostname,
+			"if":   i.name,
+		},
+		Value: t.status,
+	}
+
 	historymap[outkey] = t.outvalue
 	historymap[inkey] = t.invalue
 	lasttimemap[timekey] = time.Now().Unix()
@@ -246,6 +256,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 	pair = append(pair, point_in_normal)
 	pair = append(pair, point_out_normal)
 	pair = append(pair, point_status)
+	pair = append(pair, point_status_host)
 
 	log.Infof("make points: [ip:%s, if:%s, in-traffic:%d, out-traffic:%d]", ip, i.name, t.invalue, t.outvalue)
 	return pair
