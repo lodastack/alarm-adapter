@@ -198,12 +198,25 @@ func genTimeLambda(STime, ETime string) string {
 }
 
 func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
-	var queryWhere string
+	var queryWhere, groupby, offset string
 	if alarm.Where != "" {
 		queryWhere = "WHERE " + alarm.Where
 	}
 	timeLambda := genTimeLambda(alarm.STime, alarm.ETime)
 
+	groupby = alarm.GroupBy
+	if groupby != "*" {
+		groupby = "time(1m,-5s)"
+		tags := strings.Split(alarm.GroupBy, ",")
+		for _, tag := range tags {
+			if tag == "" {
+				continue
+			}
+			groupby = fmt.Sprintf("%s, '%s'", groupby, tag)
+		}
+		offset = `.align()
+.offset(5s)`
+	}
 	var res string
 	switch alarm.Trigger {
 	case models.DeadMan:
@@ -216,13 +229,14 @@ var data = batch
         .period(%s)
         .every(%s)
         .groupBy(%s)
+        %s
 data
     |deadman(10.0, 60s)
 data
     |alert()
         .post('%s?version=%s')`
 		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
-			alarm.Period, alarm.Every, alarm.GroupBy, k.EventAddr, alarm.Version)
+			alarm.Period, alarm.Every, groupby, offset, k.EventAddr, alarm.Version)
 
 	case models.Relative:
 		batch := `
@@ -234,11 +248,12 @@ batch
         .period(%s)
         .every(%s)
         .groupBy(%s)
+        %s
     |alert()
         .crit(lambda: "diff" %s %s %s)
         .post('%s?version=%s')`
 		res = fmt.Sprintf(batch, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
-			alarm.GroupBy, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
+			groupby, offset, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
 
 	case models.ThresHold:
 		batch := `
@@ -250,11 +265,12 @@ batch
         .period(%s)
         .every(%s)
         .groupBy(%s)
+        %s
     |alert()
         .crit(lambda: "%s" %s %s %s)
         .post('%s?version=%s')`
 		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere, alarm.Period, alarm.Every,
-			alarm.GroupBy, alarm.Func, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
+			groupby, offset, alarm.Func, alarm.Expression, alarm.Value, timeLambda, k.EventAddr, alarm.Version)
 	default:
 		return "", fmt.Errorf("unknown alarm type: %s", models.DeadMan)
 	}
