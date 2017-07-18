@@ -171,7 +171,8 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 		log.Infof("history time data init [%s %s]", ns, ip)
 	}
 
-	if time.Now().Unix()-lasttimemap[timekey] > (int64)(DefaultInterval*1.5) {
+	interval := time.Now().Unix() - lasttimemap[timekey]
+	if interval > (int64)(DefaultInterval*1.5) || interval < 1 {
 		log.Errorf("last time expired [%d]", lasttimemap[timekey])
 		lasttimemap[timekey] = time.Now().Unix()
 		delete(historymap, outkey)
@@ -188,7 +189,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_IN,
 		},
-		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.invalue - historymap[inkey]) / interval) * 8,
 	}
 
 	point_in_normal := models.Metric{
@@ -200,7 +201,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_IN,
 		},
-		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.invalue - historymap[inkey]) / interval) * 8,
 	}
 
 	point_out := models.Metric{
@@ -212,7 +213,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_OUT,
 		},
-		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.outvalue - historymap[outkey]) / interval) * 8,
 	}
 
 	point_out_normal := models.Metric{
@@ -224,7 +225,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_OUT,
 		},
-		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.outvalue - historymap[outkey]) / interval) * 8,
 	}
 
 	point_status := models.Metric{
