@@ -219,25 +219,6 @@ func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
 	}
 	var res string
 	switch alarm.Trigger {
-	case models.DeadMan:
-		batch := `
-var data = batch
-    |query('''
-        SELECT %s(value)
-        FROM "%s"."%s"."%s" %s
-    ''')
-        .period(%s)
-        .every(%s)
-        .groupBy(%s)
-        %s
-data
-    |deadman(10.0, 60s)
-data
-    |alert()
-        .post('%s?version=%s')`
-		res = fmt.Sprintf(batch, alarm.Func, alarm.DB, alarm.RP, alarm.Measurement, queryWhere,
-			alarm.Period, alarm.Every, groupby, offset, k.EventAddr, alarm.Version)
-
 	case models.Relative:
 		batch := `
 batch
