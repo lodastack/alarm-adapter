@@ -179,6 +179,11 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 		return pair
 	}
 
+	// snmp traffic counter reset to 0
+	if (t.invalue-historymap[inkey] < 0) || t.outvalue-historymap[outkey] < 0 {
+		return pair
+	}
+
 	point_in := models.Metric{
 		Name:      "net.traffic." + hostname,
 		Timestamp: time.Now().Unix(),
