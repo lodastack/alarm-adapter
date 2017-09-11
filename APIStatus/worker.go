@@ -49,7 +49,7 @@ func (master *APIMaster) Do(m map[string][]models.HTTPResponse) {
 	//check create api monitor worker
 	for ns, apis := range m {
 		for _, api := range apis {
-			if _, ok := master.workers[ns+api.Name]; !ok {
+			if _, ok := master.workers[ns+api.Name+api.Address]; !ok {
 				err := master.CreateWorker(ns, api)
 				if err != nil {
 					log.Errorf("master create worker failed: %s", err)
@@ -72,7 +72,7 @@ func (master *APIMaster) Do(m map[string][]models.HTTPResponse) {
 func apiExist(name string, m map[string][]models.HTTPResponse) bool {
 	for ns, apis := range m {
 		for _, api := range apis {
-			if name == ns+api.Name {
+			if name == ns+api.Name+api.Address {
 				return true
 			}
 		}
@@ -87,7 +87,7 @@ func (master *APIMaster) CreateWorker(ns string, m models.HTTPResponse) error {
 	master.countmu.Lock()
 	master.count++
 	master.countmu.Unlock()
-	master.workers[ns+m.Name] = w
+	master.workers[ns+m.Name+m.Address] = w
 	return nil
 }
 
