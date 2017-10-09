@@ -195,6 +195,7 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 		log.Errorf("HTTP do failed:%s", err)
 		return
 	}
+	defer resp.Body.Close()
 	fields["responseTime"] = time.Since(start).Seconds()
 	fields["responseCode"] = float64(resp.StatusCode)
 
