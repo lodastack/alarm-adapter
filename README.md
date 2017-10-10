@@ -1,6 +1,8 @@
 
 # Alarm Adapter [![CircleCI](https://circleci.com/gh/lodastack/alarm-adapter.svg?style=svg&circle-token=67ea071b179f21ae2592ec4759eaa0777eb42472)](https://circleci.com/gh/lodastack/alarm-adapter)
 
+The main func is write user alarms into kapacitor and update if user change the config. For monitoring API status, Ping status and support switch SNMP collect.
+
 ## Build
 
     make build
@@ -12,3 +14,42 @@
 ## Stop agent
 
     alarm-adapter stop
+
+## Configuration
+
+```
+[main]
+	#registry service address
+	registryAddr  = "http://registry.test.com"
+	
+[alarm]
+	enable        = false
+	#kapacitor NS
+	NS            = "alarm.monitor.loda"
+	eventAddr     = ""
+
+[ping]
+	enable        = false
+	ipList        = ["10.50.","10.90."]
+
+[api]
+	enable        = false
+	#All api will be monitored if global is true, and the NS will be ignored
+	global        = false
+	NS            = ["api.loda"]
+
+[snmp]
+	enable        = false
+	NS            = ["switch.loda"]
+	ipList        = ["10.50.","10.90."]
+	community     = ["test","test2"]
+
+
+[log]
+	logdir        = "/tmp/alarm-adapter/log"
+	loglevel      = "DEBUG"
+	logrotatenum  = 5
+	logrotatesize = 1887436800
+
+
+```
