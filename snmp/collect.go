@@ -167,20 +167,27 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 	}
 
 	if _, ok := lasttimemap[timekey]; !ok {
+		historymap[inkey] = t.invalue
+		historymap[outkey] = t.outvalue
 		lasttimemap[timekey] = time.Now().Unix()
 		log.Infof("history time data init [%s %s]", ns, ip)
+		return pair
 	}
 
-	if time.Now().Unix()-lasttimemap[timekey] > (int64)(DefaultInterval*1.5) {
+	duration := time.Now().Unix() - lasttimemap[timekey]
+	if duration <= 0 {
 		log.Errorf("last time expired [%d]", lasttimemap[timekey])
+		historymap[inkey] = t.invalue
+		historymap[outkey] = t.outvalue
 		lasttimemap[timekey] = time.Now().Unix()
-		delete(historymap, outkey)
-		delete(historymap, inkey)
 		return pair
 	}
 
 	// snmp traffic counter reset to 0
 	if (t.invalue-historymap[inkey] < 0) || t.outvalue-historymap[outkey] < 0 {
+		historymap[inkey] = t.invalue
+		historymap[outkey] = t.outvalue
+		lasttimemap[timekey] = time.Now().Unix()
 		return pair
 	}
 
@@ -193,7 +200,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_IN,
 		},
-		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.invalue - historymap[inkey]) / (int64)(duration)) * 8,
 	}
 
 	point_in_normal := models.Metric{
@@ -205,7 +212,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_IN,
 		},
-		Value: ((t.invalue - historymap[inkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.invalue - historymap[inkey]) / (int64)(duration)) * 8,
 	}
 
 	point_out := models.Metric{
@@ -217,7 +224,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_OUT,
 		},
-		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.outvalue - historymap[outkey]) / (int64)(duration)) * 8,
 	}
 
 	point_out_normal := models.Metric{
@@ -229,7 +236,7 @@ func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname st
 			"if":   i.name,
 			"type": TYPE_OUT,
 		},
-		Value: ((t.outvalue - historymap[outkey]) / (int64)(DefaultInterval)) * 8,
+		Value: ((t.outvalue - historymap[outkey]) / (int64)(duration)) * 8,
 	}
 
 	point_status := models.Metric{
