@@ -47,7 +47,7 @@ func (k *Kapacitor) SetAddr(addrs []string) {
 
 		config := client.Config{
 			URL:     addr,
-			Timeout: time.Duration(3) * time.Second,
+			Timeout: time.Duration(20) * time.Second,
 		}
 		c, err := client.New(config)
 		if err != nil {
@@ -82,7 +82,14 @@ func (k *Kapacitor) Tasks() map[string]client.Task {
 			continue
 		}
 		for _, t := range ts {
-			tasks[t.ID] = t
+			if _, ok := tasks[t.ID]; ok {
+				if err := c.DeleteTask(c.TaskLink(t.ID)); err != nil {
+					log.Errorf("delete duplicate task failed %s", err.Error())
+				}
+				log.Infof("found duplicate task, and clean it: %s", t.ID)
+			} else {
+				tasks[t.ID] = t
+			}
 		}
 	}
 	return tasks
