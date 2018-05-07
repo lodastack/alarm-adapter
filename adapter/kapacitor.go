@@ -111,12 +111,15 @@ func (k *Kapacitor) Work(tasks map[string]client.Task, alarms map[string]models.
 	}
 }
 
-// Create a new task.
+// CreateTask creates a new task.
 // Errors if the task already exists.
 func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
+	if alarm.Measurement == "agent.alive" {
+		return nil
+	}
 	tick, err := k.genTick(alarm)
 	if err != nil {
-		log.Errorf("gen tick script failed:%s", err)
+		log.Errorf("gen tick script failed:%s [%s] [%s]", err, alarm.DB, alarm.Name)
 		return err
 	}
 	dbrps := []client.DBRP{
@@ -186,22 +189,22 @@ func (k *Kapacitor) hashKapacitor(id string) string {
 	return choose
 }
 
-func genTimeLambda(STime, ETime string) string {
+func genTimeLambda(STime, ETime string) (string, error) {
 	if STime == "" || ETime == "" {
-		return ""
+		return "", fmt.Errorf("stime or etime can not be empty, stime: %s etime: %s", STime, ETime)
 	}
 	stime, errStime := strconv.Atoi(STime)
 	etime, errEtime := strconv.Atoi(ETime)
 	if stime == etime || errStime != nil || errEtime != nil {
 		log.Warningf("gen time lambda for tick fail, stime: %s, etime: %s", STime, ETime)
-		return ""
+		return "", fmt.Errorf("gen time lambda for tick fail, stime: %s, etime: %s", STime, ETime)
 	}
 
 	condition := "AND"
 	if stime > etime {
 		condition = "OR"
 	}
-	return fmt.Sprintf("AND (hour(\"time\") >= %s %s hour(\"time\") <= %s)", STime, condition, ETime)
+	return fmt.Sprintf("AND (hour(\"time\") >= %s %s hour(\"time\") <= %s)", STime, condition, ETime), nil
 }
 
 func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
@@ -209,7 +212,10 @@ func (k *Kapacitor) genTick(alarm models.Alarm) (string, error) {
 	if alarm.Where != "" {
 		queryWhere = "WHERE " + alarm.Where
 	}
-	timeLambda := genTimeLambda(alarm.STime, alarm.ETime)
+	timeLambda, err := genTimeLambda(alarm.STime, alarm.ETime)
+	if err != nil {
+		return "", err
+	}
 
 	groupby = alarm.GroupBy
 	if groupby != "*" {
