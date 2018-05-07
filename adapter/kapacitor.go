@@ -195,9 +195,13 @@ func genTimeLambda(STime, ETime string) (string, error) {
 	}
 	stime, errStime := strconv.Atoi(STime)
 	etime, errEtime := strconv.Atoi(ETime)
-	if stime == etime || errStime != nil || errEtime != nil {
+	if errStime != nil || errEtime != nil {
 		log.Warningf("gen time lambda for tick fail, stime: %s, etime: %s", STime, ETime)
 		return "", fmt.Errorf("gen time lambda for tick fail, stime: %s, etime: %s", STime, ETime)
+	}
+
+	if stime == etime {
+		return "", nil
 	}
 
 	condition := "AND"
