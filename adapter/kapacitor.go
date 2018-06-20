@@ -191,7 +191,7 @@ func (k *Kapacitor) hashKapacitor(id string) string {
 
 func genTimeLambda(STime, ETime string) (string, error) {
 	if STime == "" || ETime == "" {
-		return "", fmt.Errorf("stime or etime can not be empty, stime: %s etime: %s", STime, ETime)
+		return "", nil
 	}
 	stime, errStime := strconv.Atoi(STime)
 	etime, errEtime := strconv.Atoi(ETime)
