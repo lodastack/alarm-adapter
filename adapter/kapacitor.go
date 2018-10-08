@@ -129,7 +129,7 @@ func (k *Kapacitor) CreateTask(alarm models.Alarm) error {
 		},
 	}
 	status := client.Disabled
-	if alarm.Enable == "true" {
+	if ok, _ := strconv.ParseBool(alarm.Enable); ok {
 		status = client.Enabled
 	}
 
