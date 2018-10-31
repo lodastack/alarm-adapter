@@ -166,13 +166,13 @@ func (k *Kapacitor) RemoveTask(task client.Task) error {
 	// try delete the task at all clients
 	k.mu.RLock()
 	defer k.mu.RUnlock()
-	for url, c := range k.Clients {
-		go func(id string) {
+	for _, c := range k.Clients {
+		go func(c *client.Client, id string) {
 			err := c.DeleteTask(c.TaskLink(id))
 			if err != nil {
-				log.Errorf("delete task at %s failed: %s", url, err)
+				log.Errorf("delete task at %s failed: %s", c.URL(), err)
 			}
-		}(task.ID)
+		}(c, task.ID)
 	}
 	return nil
 }
