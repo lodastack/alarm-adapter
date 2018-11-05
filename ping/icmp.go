@@ -9,11 +9,14 @@ package ping
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"time"
 
 	"github.com/lodastack/log"
+	"golang.org/x/net/icmp"
+	"golang.org/x/net/ipv6"
 )
 
 //count of pings to send to each target
@@ -27,6 +30,7 @@ const (
 	icmpv4EchoReply   = 0
 	icmpv6EchoRequest = 128
 	icmpv6EchoReply   = 129
+	protocolIPv6ICMP  = 58
 )
 
 type icmpMessage struct {
@@ -128,20 +132,35 @@ func parseICMPEcho(b []byte) (*icmpEcho, error) {
 	return p, nil
 }
 
+// Ping pings a IP adderss
+// Para timeout unit is second.
 func Ping(address string, timeout int) float64 {
+	ipAddr, err := net.ResolveIPAddr("ip", address)
+	if err != nil {
+		return 0
+	}
 	var FailedCount float64
 	for i := 1; i <= PingTimes; i++ {
-		err := Pinger(address, timeout)
-		if err != nil {
-			log.Error("ping response with msg:", err)
-			FailedCount++
+		if isIPv4(ipAddr.IP) {
+			err := v4Pinger(address, timeout)
+			if err != nil {
+				log.Error("ping response with msg:", err)
+				FailedCount++
+			}
+		} else {
+			err := v6Pinger(address, timeout)
+			if err != nil {
+				log.Error("ping response with msg:", err)
+				FailedCount++
+			}
 		}
 		time.Sleep(time.Duration(IntervalPackage) * time.Millisecond)
 	}
+	fmt.Println(FailedCount)
 	return (FailedCount / PingTimes) * 100
 }
 
-func Pinger(address string, timeout int) error {
+func v4Pinger(address string, timeout int) error {
 	c, err := net.DialTimeout("ip4:icmp", address, time.Duration(timeout)*time.Second)
 	if err != nil {
 		return err
@@ -178,10 +197,9 @@ func Pinger(address string, timeout int) error {
 			return err
 		}
 		switch m.Type {
-		case icmpv4EchoRequest, icmpv6EchoRequest:
-			continue
+		case icmpv4EchoReply:
+			return nil
 		}
-		break
 	}
 	return nil
 }
@@ -192,4 +210,56 @@ func ipv4Payload(b []byte) []byte {
 	}
 	hdrlen := int(b[0]&0x0f) << 2
 	return b[hdrlen:]
+}
+
+func v6Pinger(address string, timeout int) error {
+	c, err := net.DialTimeout("ip6:ipv6-icmp", address, time.Duration(timeout)*time.Second)
+	if err != nil {
+		return err
+	}
+	if err = c.SetDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); err != nil {
+		return err
+	}
+	defer c.Close()
+
+	typ := icmpv6EchoRequest
+	xid, xseq := os.Getpid()&0xffff, 1
+	wb, err := (&icmpMessage{
+		Type: typ, Code: 0,
+		Body: &icmpEcho{
+			ID: xid, Seq: xseq,
+			Data: bytes.Repeat([]byte("Go Go Ping!!!"), 3),
+		},
+	}).Marshal()
+	if err != nil {
+		return err
+	}
+	if _, err = c.Write(wb); err != nil {
+		return err
+	}
+
+	for {
+		rb := make([]byte, 20+len(wb))
+		if _, err = c.Read(rb); err != nil {
+			return err
+		}
+		var m *icmp.Message
+		var err error
+		if m, err = icmp.ParseMessage(protocolIPv6ICMP, rb); err != nil {
+			return fmt.Errorf("Error parsing icmp v6 message")
+		}
+		switch m.Type {
+		case ipv6.ICMPTypeEchoReply:
+			return nil
+		}
+	}
+	return nil
+}
+
+func isIPv4(ip net.IP) bool {
+	v := ip.To4()
+	if v != nil {
+		return true
+	}
+	return false
 }
