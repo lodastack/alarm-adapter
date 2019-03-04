@@ -24,18 +24,21 @@ func Start() {
 	k := NewKapacitor(servers, config.C.Alarm.EventAddr)
 
 	go updateAlarmServers(k, r)
-	ticker := time.NewTicker(time.Duration(defaultInterval) * time.Minute)
+
 	for {
-		select {
-		case <-ticker.C:
-			tasks := k.Tasks()
-			alarms, err := r.Alarms()
-			if err != nil {
-				log.Errorf("get alarms failed:%s", err)
-			} else {
-				go k.Work(tasks, alarms)
-			}
+	SLEEP:
+		time.Sleep(time.Duration(defaultInterval) * time.Minute)
+
+		tasks, err := k.Tasks()
+		if err != nil || tasks == nil || len(tasks) == 0 {
+			goto SLEEP
 		}
+		alarms, err := r.Alarms()
+		if err != nil || alarms == nil || len(alarms) == 0 {
+			log.Errorf("get alarms failed: %v", err)
+			goto SLEEP
+		}
+		k.Work(tasks, alarms)
 	}
 }
 

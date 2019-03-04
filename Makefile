@@ -4,7 +4,9 @@ fmt:
 	gofmt -l -w -s ./
 
 dep:fmt
-	gdm restore
+	go get github.com/sparrc/gdm
+	go install github.com/sparrc/gdm
+	/go/bin/gdm restore
 
 install:dep
 	go install agent
