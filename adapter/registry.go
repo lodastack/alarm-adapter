@@ -52,13 +52,13 @@ func (r *Registry) Alarms() (map[string]models.Alarm, error) {
 	url := fmt.Sprintf("%s/api/v1/alarm/resource?ns=%s&type=alarm", r.Addr, root)
 	response, err := requests.Get(url)
 	if err != nil {
-		return alarms, err
+		return nil, err
 	}
 
 	if response.Status == 200 {
 		err = json.Unmarshal(response.Body, &resp)
 		if err != nil {
-			return alarms, err
+			return nil, err
 		}
 		for _, a := range resp.Data {
 			alarms[a.Version] = a
@@ -66,7 +66,7 @@ func (r *Registry) Alarms() (map[string]models.Alarm, error) {
 		return alarms, nil
 	}
 
-	return alarms, fmt.Errorf("get alarms failed: code %d", response.Status)
+	return nil, fmt.Errorf("get alarms failed: code %d", response.Status)
 }
 
 func (r *Registry) AlarmServers() ([]string, error) {

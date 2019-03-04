@@ -63,7 +63,7 @@ func (k *Kapacitor) SetAddr(addrs []string) {
 	log.Infof("start update clients: %v", k.Addrs)
 }
 
-func (k *Kapacitor) Tasks() map[string]client.Task {
+func (k *Kapacitor) Tasks() (map[string]client.Task, error) {
 	tasks := make(map[string]client.Task)
 	for _, url := range k.Addrs {
 		k.mu.RLock()
@@ -71,7 +71,7 @@ func (k *Kapacitor) Tasks() map[string]client.Task {
 		k.mu.RUnlock()
 		if !ok {
 			log.Errorf("get cache kapacitor %s client failed", url)
-			continue
+			return nil, fmt.Errorf("get cache kapacitor %s client failed", url)
 		}
 		var listOpts client.ListTasksOptions
 		listOpts.Default()
@@ -79,7 +79,7 @@ func (k *Kapacitor) Tasks() map[string]client.Task {
 		ts, err := c.ListTasks(&listOpts)
 		if err != nil {
 			log.Errorf("list kapacitor %s client failed: %s", url, err)
-			continue
+			return nil, fmt.Errorf("list kapacitor %s client failed: %s", url, err)
 		}
 		for _, t := range ts {
 			if _, ok := tasks[t.ID]; ok {
@@ -92,7 +92,7 @@ func (k *Kapacitor) Tasks() map[string]client.Task {
 			}
 		}
 	}
-	return tasks
+	return tasks, nil
 }
 
 func (k *Kapacitor) Work(tasks map[string]client.Task, alarms map[string]models.Alarm) {
@@ -100,14 +100,14 @@ func (k *Kapacitor) Work(tasks map[string]client.Task, alarms map[string]models.
 		if _, ok := tasks[id]; ok {
 			continue
 		}
-		go k.CreateTask(alarm)
+		k.CreateTask(alarm)
 	}
 
 	for id, task := range tasks {
 		if _, ok := alarms[id]; ok {
 			continue
 		}
-		go k.RemoveTask(task)
+		k.RemoveTask(task)
 	}
 }
 
