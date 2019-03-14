@@ -118,6 +118,10 @@ func (w *PingWorker) Run() {
 
 	pingfunc := func() {
 		loss := Ping(w.ip, DefaultTimeout)
+		if !PingLive && loss > 90.0 {
+			log.Errorf("ping liveness is %v, ignore this data", PingLive)
+			return
+		}
 		go Send(w.ns, w.hostname, w.ip, loss)
 		log.Debugf("Ping [%s] %s  %s Loss:%v", w.ns, w.ip, w.hostname, loss)
 	}

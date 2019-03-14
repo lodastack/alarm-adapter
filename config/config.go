@@ -51,6 +51,7 @@ type AlarmConfig struct {
 type PingConfig struct {
 	Enable bool     `toml:"enable"`
 	IpList []string `toml:"ipList"`
+	Notary []string `toml:"notary"`
 }
 
 type APIConfig struct {
