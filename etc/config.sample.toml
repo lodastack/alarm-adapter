@@ -9,6 +9,7 @@
 [ping]
 	enable        = false
 	ipList        = ["10.50.","10.90."]
+	notary        = ["8.8.8.8"]
 
 [api]
 	enable        = false
