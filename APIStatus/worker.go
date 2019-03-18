@@ -182,53 +182,57 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 	if h.Body != "" {
 		body = strings.NewReader(h.Body)
 	}
-	request, err := http.NewRequest(h.Method, h.Address, body)
-	if err != nil {
-		log.Errorf("API status new request Failed:%s", err)
-		return
-	}
+	adds := strings.Split(h.Address, "&&&")
+	for _, addr := range adds {
+		request, err := http.NewRequest(h.Method, addr, body)
+		if err != nil {
+			log.Errorf("API status new request Failed:%s", err)
+			continue
+		}
 
-	// Start Timer
-	start := time.Now()
-	resp, err := client.Do(request)
-	if err != nil {
-		log.Errorf("HTTP do failed:%s", err)
-		return
-	}
-	defer resp.Body.Close()
-	fields["responseTime"] = time.Since(start).Seconds()
-	fields["responseCode"] = float64(resp.StatusCode)
+		// Start Timer
+		start := time.Now()
+		resp, err := client.Do(request)
+		if err != nil {
+			log.Errorf("HTTP do failed:%s", err)
+			continue
+		}
+		defer resp.Body.Close()
+		fields["responseTime"] = time.Since(start).Seconds()
+		fields["responseCode"] = float64(resp.StatusCode)
 
-	// Check the response for status code.
-	if resp.StatusCode/100 == 2 {
-		fields["alive"] = 1
-	}
+		// Check the response for status code.
+		if resp.StatusCode/100 == 2 {
+			fields["alive"] = 1
+		}
 
-	// Check the response for a regex match.
-	if h.ResponseStringMatch != "" {
+		// Check the response for a regex match.
+		if h.ResponseStringMatch != "" {
 
-		// Compile once and reuse
-		if h.CompiledStringMatch == nil {
-			h.CompiledStringMatch = regexp.MustCompile(h.ResponseStringMatch)
+			// Compile once and reuse
+			if h.CompiledStringMatch == nil {
+				h.CompiledStringMatch = regexp.MustCompile(h.ResponseStringMatch)
+				if err != nil {
+					log.Errorf("Failed to compile regular expression %s : %s", h.ResponseStringMatch, err)
+					fields["responseMatch"] = 0
+					return
+				}
+			}
+
+			bodyBytes, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Errorf("Failed to compile regular expression %s : %s", h.ResponseStringMatch, err)
+				log.Errorf("Failed to read body of HTTP Response : %s", err)
 				fields["responseMatch"] = 0
 				return
 			}
-		}
 
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Errorf("Failed to read body of HTTP Response : %s", err)
-			fields["responseMatch"] = 0
-			return
+			if h.CompiledStringMatch.Match(bodyBytes) {
+				fields["responseMatch"] = 1
+			} else {
+				fields["responseMatch"] = 0
+			}
 		}
-
-		if h.CompiledStringMatch.Match(bodyBytes) {
-			fields["responseMatch"] = 1
-		} else {
-			fields["responseMatch"] = 0
-		}
+		break
 	}
 	return
 }
