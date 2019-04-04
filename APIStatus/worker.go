@@ -232,7 +232,10 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 				fields["responseMatch"] = 0
 			}
 		}
-		break
+
+		if fields["alive"] == 1 {
+			break
+		}
 	}
 	return
 }
