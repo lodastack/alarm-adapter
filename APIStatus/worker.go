@@ -171,6 +171,7 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 		interval = DefaultTimeout
 	}
 	tr := &http.Transport{
+		DisableKeepAlives:     true,
 		ResponseHeaderTimeout: time.Duration(interval) * time.Second,
 	}
 	client := &http.Client{
@@ -197,7 +198,6 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 			log.Errorf("HTTP do failed:%s", err)
 			continue
 		}
-		defer resp.Body.Close()
 		fields["responseTime"] = time.Since(start).Seconds()
 		fields["responseCode"] = float64(resp.StatusCode)
 
@@ -215,6 +215,7 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 				if err != nil {
 					log.Errorf("Failed to compile regular expression %s : %s", h.ResponseStringMatch, err)
 					fields["responseMatch"] = 0
+					resp.Body.Close()
 					return
 				}
 			}
@@ -223,6 +224,7 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 			if err != nil {
 				log.Errorf("Failed to read body of HTTP Response : %s", err)
 				fields["responseMatch"] = 0
+				resp.Body.Close()
 				return
 			}
 
@@ -232,6 +234,7 @@ func monitorAPI(ns string, h models.HTTPResponse) {
 				fields["responseMatch"] = 0
 			}
 		}
+		resp.Body.Close()
 		break
 	}
 	return
