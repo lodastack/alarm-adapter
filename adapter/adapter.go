@@ -30,7 +30,8 @@ func Start() {
 		time.Sleep(time.Duration(defaultInterval) * time.Minute)
 
 		tasks, err := k.Tasks()
-		if err != nil || tasks == nil || len(tasks) == 0 {
+		if err != nil || tasks == nil {
+			log.Errorf("get tasks failed: %v", err)
 			goto SLEEP
 		}
 		alarms, err := r.Alarms()
