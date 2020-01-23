@@ -2,9 +2,9 @@
 	registryAddr  = "http://registry.test.com"
 	
 [alarm]
-	enable        = false
-	NS            = "alarm.monitor.loda"
-	eventAddr     = ""
+	enable        = true
+	NS            = "kapacitor.alarm.monitor.loda"
+	eventAddr     = "http://event-server:8001/event/post"
 
 [ping]
 	enable        = false
@@ -24,7 +24,7 @@
 
 
 [log]
-	logdir        = "/tmp/alarm-adapter/log"
+	logdir        = "/data/logs/alarm-adapter"
 	loglevel      = "DEBUG"
 	logrotatenum  = 5
 	logrotatesize = 1887436800
