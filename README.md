@@ -23,10 +23,10 @@ The main func is write user alarms into kapacitor and update if user change the 
 	registryAddr  = "http://registry.test.com"
 	
 [alarm]
-	enable        = false
+	enable        = true
 	#kapacitor NS
-	NS            = "alarm.monitor.loda"
-	eventAddr     = ""
+	NS            = "kapacitor.alarm.monitor.loda"
+	eventAddr     = "http://event.test.com"
 
 [ping]
 	enable        = false
@@ -47,7 +47,7 @@ The main func is write user alarms into kapacitor and update if user change the 
 
 [log]
 	logdir        = "/tmp/alarm-adapter/log"
-	loglevel      = "DEBUG"
+	loglevel      = "INFO"
 	logrotatenum  = 5
 	logrotatesize = 1887436800
 
