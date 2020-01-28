@@ -155,9 +155,9 @@ func FetchTraffic(ns string, s *gosnmp.GoSNMP, NetworkInfs []NetworkInf, ip stri
 func MakePoint(ns string, t NetworkTraffic, i NetworkInf, ip string, hostname string) (pair []models.Metric) {
 	mu.Lock()
 	defer mu.Unlock()
-	timekey := fmt.Sprint("%s%s%s", ns, ip, i.name)
-	inkey := fmt.Sprint("%s%s%s%s", ns, ip, i.name, TYPE_IN)
-	outkey := fmt.Sprint("%s%s%s%s", ns, ip, i.name, TYPE_OUT)
+	timekey := fmt.Sprintf("%s%s%s", ns, ip, i.name)
+	inkey := fmt.Sprintf("%s%s%s%s", ns, ip, i.name, TYPE_IN)
+	outkey := fmt.Sprintf("%s%s%s%s", ns, ip, i.name, TYPE_OUT)
 	if _, ok := historymap[inkey]; !ok {
 		historymap[inkey] = t.invalue
 		historymap[outkey] = t.outvalue
