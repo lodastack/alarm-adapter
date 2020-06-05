@@ -53,3 +53,8 @@ The main func is write user alarms into kapacitor and update if user change the 
 
 
 ```
+
+
+## Use docker image
+
+    docker run -d lodastack/alarm-adapter

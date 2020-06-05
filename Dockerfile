@@ -1,16 +1,17 @@
-FROM ubuntu:latest
+FROM golang:1.14 AS build
 
-WORKDIR /app
+COPY . /src/project
+WORKDIR /src/project
 
-# copy binary and config into image
-COPY alarm-adapter /app/
-COPY alarm-adapter.conf /app/
+RUN export CGO_ENABLED=0 &&\
+    export GOPROXY=https://goproxy.io &&\
+    make &&\
+    cp cmd/alarm-adapter/alarm-adapter /alarm-adapter &&\
+    cp etc/alarm-adapter.sample.conf /alarm-adapter.conf
 
-RUN chmod +x alarm-adapter
+FROM debian:10
+RUN apt-get update && apt-get install -y ca-certificates
+COPY --from=build /alarm-adapter /alarm-adapter
+COPY --from=build /alarm-adapter.conf /etc/alarm-adapter.conf
 
-# Add influxd to the PATH
-ENV PATH=/app:$PATH
-
-VOLUME ["/data/logs"]
-
-ENTRYPOINT ["alarm-adapter", "start", "-c", "alarm-adapter.conf"]
+CMD ["/alarm-adapter", "start", "-c", "/etc/alarm-adapter.conf"]
